@@ -11,8 +11,8 @@ def make_pair():
         if len(connected_clients) >= 2:
             client1 = connected_clients[0]
             client2 = connected_clients[1]
-            client1.fix_match(client2.client_address)
-            client2.fix_match(client1.client_address)
+            client1.fix_match(client2.client_address,player_no=1)
+            client2.fix_match(client1.client_address,player_no=2)
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -29,7 +29,7 @@ class TCPHandler(socketserver.BaseRequestHandler):
         t = time.process_time()
         while 1:
             if time.process_time() - t >= 30:
-                msg = "0,0"
+                msg = "0,0,0"
                 self.request.send(msg.encode())
                 connected_clients.remove(self)
                 break
@@ -37,9 +37,9 @@ class TCPHandler(socketserver.BaseRequestHandler):
                 break
         self.request.close()
 
-    def fix_match(self, addr):
+    def fix_match(self, addr,player_no):
         ip, port = addr
-        msg = f"{ip},{port}"
+        msg = f"{ip},{port},{player_no}"
         self.request.send(msg.encode())
         connected_clients.pop(0)
 
