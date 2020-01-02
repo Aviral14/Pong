@@ -1,10 +1,8 @@
-import pygame
 import socket
 import sys
-import random
+from settings import SERVER_IP, SERVER_PORT
 
-SERVER_IP = "127.0.0.1"
-SERVER_PORT = 8000
+player_no = 0
 
 
 class Player:
@@ -13,7 +11,6 @@ class Player:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.bind(("", 0))
             self.port = self.sock.getsockname()[1]
-            print("my port:", self.port)
             self.sock.connect((SERVER_IP, SERVER_PORT))
             data = self.sock.recv(1024)
         except Exception as e:
@@ -23,7 +20,7 @@ class Player:
             )
             sys.exit()
         data = data.decode("utf-8")
-        ip, port = data.split(",")
+        ip, port, player_no = data.split(",")
         port = int(port)
         if port:
             self.peer_ip = ip
@@ -46,22 +43,13 @@ class Player:
             self.connect_to_server()
             return
         try:
-            for i in range(5):
+            for i in range(2):
                 self.sock.sendto(
-                    (("Hi! I am a player" + str(random.randint(0, 100))).encode()),
-                    (self.peer_ip, self.peer_port),
+                    ("Hi! I am a player".encode()), (self.peer_ip, self.peer_port),
                 )
                 data = self.sock.recvfrom(1024)
                 print(data)
-            self.sock.sendto(
-                (("Hi! I am a player" + str(random.randint(0, 100))).encode()),
-                (self.peer_ip, self.peer_port),
-            )
         except Exception as e:
             print(e)
             print("The Peer Closed the Game.You Won!")
 
-
-if __name__ == "__main__":
-    player = Player()
-    player.connect_to_server()
