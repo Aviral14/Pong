@@ -41,15 +41,6 @@ class Player:
                 "Couldn't Connect to Peer! Connecting Again to the server to find new peer!"
             )
             self.connect_to_server()
-            return
-        try:
-            for i in range(2):
-                self.sock.sendto(
-                    ("Hi! I am a player".encode()), (self.peer_ip, self.peer_port),
-                )
-                data = self.sock.recvfrom(1024)
-                print(data)
-        except Exception as e:
-            print(e)
-            print("The Peer Closed the Game.You Won!")
 
+class GameState:
+    pass
