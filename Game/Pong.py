@@ -1,27 +1,20 @@
 import pygame
 from pygame.locals import *
 import sys
-from players import *
+import threading
+import players
 from settings import *
-
-
-def load_image(image, location):
-    image = pygame.image.load(image).convert()
-    rect = image.get_rect()
-    rect.left, rect.top = location
-    return image, rect
 
 
 class Bar(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        global player_no
-        if player_no == 1:
+        if players.player_no == 1:
             x = 0
-            player_no=2
+            players.player_no = 2
         else:
-            x = SCREEN_WIDTH - BAR_WIDTH - 9
-            player_no=1
+            x = SCREEN_WIDTH - BAR_WIDTH
+            players.player_no = 1
         y = int(SCREEN_HEIGHT / 2 - BAR_HEIGHT)
         location = (x, y)
         self.image, self.rect = load_image("bar.png", location)
@@ -39,12 +32,17 @@ class Bar(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT
         if self.rect.top < PANEL_HEIGHT:
             self.rect.top = PANEL_HEIGHT
+        if players.player_game_state_update:
+            players.player_game_state = OP_CODES[0] + "," + str((self.rect.top))
 
 
-if __name__ == "__main__":
-    player = Player()
-    player.connect_to_server()
+def load_image(image, location):
+    image = pygame.image.load(image).convert()
+    rect = image.get_rect()
+    rect.left, rect.top = location
+    return image, rect
 
+def run_game():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Pong")
@@ -52,21 +50,30 @@ if __name__ == "__main__":
 
     clock = pygame.time.Clock()
     player_bar = Bar()
-    opponent_bar=Bar()
-    allsprites = pygame.sprite.RenderPlain(player_bar,opponent_bar)
+    opponent_bar = Bar()
+    to_update_sprites = pygame.sprite.RenderPlain(player_bar)
+    to_draw_sprites = pygame.sprite.RenderPlain(player_bar, opponent_bar)
 
-    while 1:
+    while players.going:
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == QUIT:
-                sys.exit()
+                players.going = False
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP]:
+        if keys[K_UP]:
             player_bar.up = True
-        if keys[pygame.K_DOWN]:
+            players.player_game_state_update = True
+        if keys[K_DOWN]:
             player_bar.down = True
+            players.player_game_state_update = True
+        if players.opponent_game_state_update:
+            opcode, data = players.opponent_game_state.split(",")
+            data = int(data)
+            if opcode == OP_CODES[0]:
+                opponent_bar.rect.top = data
+            players.opponent_game_state_update = False
 
-        allsprites.update()
+        to_update_sprites.update()
         screen.blit(background_image, background_rect)
-        allsprites.draw(screen)
+        to_draw_sprites.draw(screen)
         pygame.display.flip()

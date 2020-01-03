@@ -1,6 +1,11 @@
 # Server Properties
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 8000
+TIMEOUT_PERIOD = 5
+ACK_PERIOD = 3
+
+# Game State Properties
+OP_CODES = ["OP_MOVE", "OP_HIT"]
 
 # Screen Properties
 SCREEN_HEIGHT = 629
