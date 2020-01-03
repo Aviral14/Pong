@@ -17,7 +17,7 @@ class Bar(pygame.sprite.Sprite):
             players.player_no = 1
         y = int(SCREEN_HEIGHT / 2 - BAR_HEIGHT)
         location = (x, y)
-        self.image, self.rect = load_image("bar.png", location)
+        self.image, self.rect = load_image("bar.png", location,transparent=False)
         self.up = False
         self.down = False
 
@@ -36,11 +36,32 @@ class Bar(pygame.sprite.Sprite):
             players.player_game_state = OP_CODES[0] + "," + str((self.rect.top))
 
 
-def load_image(image, location):
+class Ball(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        location = (0,0)
+        self.image, self.rect = load_image("ball.png", location,transparent=True)
+        self.rect.centerx=int(SCREEN_WIDTH/2)
+        self.rect.centery=int(SCREEN_HEIGHT/2)
+        self.speedx=8
+        self.speedy=8
+
+    def update(self):
+        self.rect.centerx+=self.speedx
+        self.rect.centery+=self.speedy
+        if self.rect.bottom > SCREEN_HEIGHT or self.rect.top < PANEL_HEIGHT:
+            self.speedy = -self.speedy
+        if self.rect.right > SCREEN_WIDTH or self.rect.left < 0:
+            self.rect.centerx =int (SCREEN_WIDTH/2) 
+            self.rect.centery = int(SCREEN_HEIGHT/2)
+    
+def load_image(image, location,transparent=False):
     image = pygame.image.load(image).convert()
+    image.set_colorkey((255, 255, 255))
     rect = image.get_rect()
     rect.left, rect.top = location
     return image, rect
+
 
 def run_game():
     pygame.init()
@@ -51,11 +72,12 @@ def run_game():
     clock = pygame.time.Clock()
     player_bar = Bar()
     opponent_bar = Bar()
-    to_update_sprites = pygame.sprite.RenderPlain(player_bar)
-    to_draw_sprites = pygame.sprite.RenderPlain(player_bar, opponent_bar)
+    ball = Ball()
+    to_update_sprites = pygame.sprite.RenderPlain(player_bar, ball)
+    to_draw_sprites = pygame.sprite.RenderPlain(player_bar, opponent_bar, ball)
 
     while players.going:
-        clock.tick(60)
+        clock.tick(50)
         for event in pygame.event.get():
             if event.type == QUIT:
                 players.going = False
@@ -72,6 +94,8 @@ def run_game():
             if opcode == OP_CODES[0]:
                 opponent_bar.rect.top = data
             players.opponent_game_state_update = False
+        if ball.rect.colliderect(player_bar.rect):
+            ball.speedx=-ball.speedx
 
         to_update_sprites.update()
         screen.blit(background_image, background_rect)
