@@ -7,10 +7,10 @@ connected_clients = []
 
 
 def make_pair():
-    while 1:
+    global connected_clients
+    while True:
         if len(connected_clients) >= 2:
-            client1 = connected_clients[0]
-            client2 = connected_clients[1]
+            client1, client2 = connected_clients[:2]
             client1.fix_match(client2.client_address, player_no=1)
             client2.fix_match(client1.client_address, player_no=2)
 
@@ -27,13 +27,13 @@ class TCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         connected_clients.append(self)
         t = time.process_time()
-        while 1:
+        while True:
             if time.process_time() - t >= 30:
                 msg = "0,0,0"
                 self.request.send(msg.encode())
                 connected_clients.remove(self)
                 break
-            if not any(obj for obj in connected_clients if obj == self):
+            if not [obj for obj in connected_clients if obj == self]:
                 break
         self.request.close()
 
